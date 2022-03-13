@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,7 +77,14 @@ namespace Plugin.BLE.Abstractions
                 CleanupScan();
                 Trace.Message("Adapter: Scan was cancelled.");
             }
-        }
+            catch (Exception ex)
+            {
+                CleanupScan();
+                Trace.Message($"Adapter: Scan was cancelled by exception={ex.Message}");
+                throw ex;
+            }
+
+    }
 
         public Task StopScanningForDevicesAsync()
         {
