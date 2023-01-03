@@ -73,6 +73,33 @@ namespace Plugin.BLE.Abstractions.Contracts
         IReadOnlyList<IDevice> ConnectedDevices { get; }
 
         /// <summary>
+        /// Returns whether the device cache should be cleared after the device disconnected,
+        /// before calling
+        /// {
+        ///  @link BluetoothGatt#close()}. By default it returns false.
+        /// <p>
+        /// If the returned value is true, the next time the Android device will connect to
+        /// this peripheral the services will be discovered again. If false, the services
+        /// will be obtained from the cache.
+        /// <p>
+        /// Note, that the
+        /// {
+        /// @link BluetoothGatt#refresh()} method is not in the public API and it
+        /// is not recommended to use this.However, as Android is caching services of all devices,
+        /// even if they are not bonded and have Service Changed characteristic, it may necessary to
+        /// clear the cache manually.
+        /// <p>
+        /// On older Android versions clearing device cache helped with connection stability.
+        /// It was common to get error 133 on the second and following connections when services were
+        /// obtained from the cache.However, full service discovery takes time and consumes peripheral's
+        /// battery.
+        /// @return True, if the device cache should be cleared after the device disconnects or false,
+        /// (default) if the cached value be used.
+        /// ref : nrf android ble library, https://github.com/NordicSemiconductor/Android-BLE-Library
+        /// </summary>
+        bool IsShouldClearCacheWhenDisconnected { get; set; }
+
+        /// <summary>
         /// Starts scanning for BLE devices that fulfill the <paramref name="deviceFilter"/>.
         /// DeviceDiscovered will only be called, if <paramref name="deviceFilter"/> returns <c>true</c> for the discovered device.
         /// </summary>

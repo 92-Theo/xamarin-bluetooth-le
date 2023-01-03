@@ -33,6 +33,7 @@ namespace Plugin.BLE.Abstractions
 
         public int ScanTimeout { get; set; } = 10000;
         public ScanMode ScanMode { get; set; } = ScanMode.LowPower;
+        public bool IsShouldClearCacheWhenDisconnected { get; set; } = false;
 
 
         /// <summary>
@@ -215,11 +216,13 @@ namespace Plugin.BLE.Abstractions
 
         public void HandleConnectedDevice(IDevice device)
         {
+            Logger.Write("HandleConnectedDevice", $"id={device?.Id},name={device?.Name},pk={device?.Pk},created={device?.Created}");
             DeviceConnected?.Invoke(this, new DeviceEventArgs { Device = device });
         }
 
         public void HandleDisconnectedDevice(bool disconnectRequested, IDevice device)
         {
+            Logger.Write("HandleConnectedDevice", $"disconnectRequested={disconnectRequested},id={device?.Id},name={device?.Name},pk={device?.Pk},created={device?.Created}");
             if (disconnectRequested)
             {
                 Trace.Message("DisconnectedPeripheral by user: {0}", device.Name);

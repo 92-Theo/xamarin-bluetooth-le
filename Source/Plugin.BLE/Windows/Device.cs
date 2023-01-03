@@ -89,6 +89,12 @@ namespace Plugin.BLE.UWP
             return false;
         }
 
+        protected override bool RefreshDeviceCacheNative()
+        {
+            Trace.Message("Refresh Device Cache not supported in UWP");
+            return false;
+        }
+
         public override void Dispose()
         {
             NativeDevice.Services.ToList().ForEach(s => 

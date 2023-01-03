@@ -43,6 +43,9 @@ namespace Plugin.BLE.Abstractions
         public DeviceState State => GetState();
         public IReadOnlyList<AdvertisementRecord> AdvertisementRecords { get; protected set; }
         public TNativeDevice NativeDevice { get; protected set; }
+        public DateTimeOffset Created { get; private set; }
+        public string Pk { get; private set; }
+
         CancellationTokenSource ICancellationMaster.TokenSource { get; set; } = new CancellationTokenSource();
         object IDevice.NativeDevice => NativeDevice;
 
@@ -50,6 +53,8 @@ namespace Plugin.BLE.Abstractions
         {
             Adapter = adapter;
             NativeDevice = nativeDevice;
+            Created = DateTimeOffset.Now;
+            Pk = Guid.NewGuid().ToString();
         }
 
         public async Task<IReadOnlyList<IService>> GetServicesAsync(CancellationToken cancellationToken = default)
@@ -92,12 +97,18 @@ namespace Plugin.BLE.Abstractions
             return UpdateConnectionIntervalNative(interval);
         }
 
+        public bool RefreshDeviceCache()
+        {
+            return RefreshDeviceCacheNative();
+        }
+
         public abstract Task<bool> UpdateRssiAsync();
         protected abstract DeviceState GetState();
         protected abstract Task<IReadOnlyList<IService>> GetServicesNativeAsync();
         protected abstract Task<IService> GetServiceNativeAsync(Guid id);
         protected abstract Task<int> RequestMtuNativeAsync(int requestValue);
         protected abstract bool UpdateConnectionIntervalNative(ConnectionInterval interval);
+        protected abstract bool RefreshDeviceCacheNative();
 
         public override string ToString()
         {

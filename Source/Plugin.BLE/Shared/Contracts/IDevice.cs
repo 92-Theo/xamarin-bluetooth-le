@@ -102,5 +102,13 @@ namespace Plugin.BLE.Abstractions.Contracts
         /// <returns>True if the update request was sucessfull. On iOS it will always return false.</returns>
         /// <param name="interval">The requested interval (High/Low/Normal)</param>
         bool UpdateConnectionInterval(ConnectionInterval interval);
+
+        /// <summary>
+        /// Clears the device cache.
+        /// </summary>
+        /// <returns>success</returns>
+        bool RefreshDeviceCache();
+        DateTimeOffset Created { get; }
+        string Pk { get; }
     }
 }

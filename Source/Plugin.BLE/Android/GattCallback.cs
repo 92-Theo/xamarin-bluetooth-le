@@ -3,6 +3,7 @@ using Android.Bluetooth;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Extensions;
 using Plugin.BLE.Android.CallbackEventArgs;
+using Plugin.BLE.Android.Extensions;
 
 namespace Plugin.BLE.Android
 {
@@ -42,6 +43,7 @@ namespace Plugin.BLE.Android
         public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
         {
             base.OnConnectionStateChange(gatt, status, newState);
+            Logger.Write("OnConnectionStateChange", $"GattStatus={status},id ={_device.Id},name={_device.Name},pk={_device.Pk},created={_device.Created}");
 
             if (!gatt.Device.Address.Equals(_device.NativeDevice.Address))
             {
@@ -59,11 +61,18 @@ namespace Plugin.BLE.Android
                 // disconnected
                 case ProfileState.Disconnected:
 
+                    /*
+                    Android - BLE 연결이벤트가 2개이상 중복으로 발생 #5
+                    https://github.com/spcecialone/keyplus-xamarin-v2/issues/5
+                    주석처리 굳이 좀비를 만들 필요가 없고, 주기적으로 연결시도를 하기 때문
+                    */
+                    CloseGattInstances(gatt, status.IsRefreshCache());
+
                     // Close GATT if autoConnect is disabled, else we can accumulate zombie gatts.
-                    if (!_device.ConnectParameters.AutoConnect)
-                    {
-                        CloseGattInstances(gatt);
-                    }
+                    //if (!_device.GetConnectParameters.AutoConnect)
+                    //{
+                    //    CloseGattInstances(gatt);
+                    //}
 
                     // If status == 19, then connection was closed by the peripheral device (clean disconnect), consider this as a DeviceDisconnected
                     if (_device.IsOperationRequested || (int)status == 19)
@@ -128,7 +137,7 @@ namespace Plugin.BLE.Android
                         Trace.Message($"Error while connecting '{_device.Name}'. GattStatus: {status}. ");
                         _adapter.HandleConnectionFail(_device, $"GattCallback error: {status}");
 
-                        CloseGattInstances(gatt);
+                        CloseGattInstances(gatt, false);
                     }
                     else
                     {
@@ -144,18 +153,19 @@ namespace Plugin.BLE.Android
             }
         }
 
-        private void CloseGattInstances(BluetoothGatt gatt)
+        private void CloseGattInstances(BluetoothGatt gatt, bool shouldRefresh)
         {
             //ToDO just for me
             Trace.Message($"References of parent device gatt and callback gatt equal? {ReferenceEquals(_device._gatt, gatt).ToString().ToUpper()}");
 
             if (!ReferenceEquals(gatt, _device._gatt))
             {
+                Logger.Write("CloseGattInstances", $"id ={_device.Id},name={_device.Name},pk={_device.Pk},created={_device.Created},call gatt.Close");
                 gatt.Close();
             }
 
             //cleanup everything else
-            _device.CloseGatt();
+            _device.CloseGatt(shouldRefresh);
         }
 
         public override void OnServicesDiscovered(BluetoothGatt gatt, GattStatus status)

@@ -172,5 +172,11 @@ namespace Plugin.BLE.iOS
             Trace.Message("Cannot update connection inteval on iOS.");
             return false;
         }
+
+        protected override bool RefreshDeviceCacheNative()
+        {
+            Trace.Message("Cannot refresh device cache on iOS.");
+            return false;
+        }
     }
 }

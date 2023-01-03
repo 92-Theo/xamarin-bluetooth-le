@@ -135,6 +135,7 @@ namespace Plugin.BLE.Android
             }
             else
             {
+            	Logger.Write("Connect", $"autoconnect={connectParameters.AutoConnect},id={Id},name={Name},pk={Pk},created={Created}");
                 var connectGatt = NativeDevice.ConnectGatt(Application.Context, connectParameters.AutoConnect, _gattCallback);
                 _connectCancellationTokenRegistration.Dispose();
                 _connectCancellationTokenRegistration = cancellationToken.Register(() => DisconnectAndClose(connectGatt));
@@ -201,8 +202,22 @@ namespace Plugin.BLE.Android
         /// CloseGatt is called by the gattCallback in case of user disconnect or a disconnect by signal loss or a connection error.
         /// Cleares all cached services.
         /// </summary>
-        public void CloseGatt()
+        public void CloseGatt(bool shouldRefresh)
         {
+            Logger.Write("CloseGatt", $"id={Id},name={Name},pk={Pk},created={Created},call _gatt?.Close()");
+
+            if (shouldRefresh || (Adapter?.IsShouldClearCacheWhenDisconnected ?? false))
+            {
+                var refreshed = RefreshDeviceCacheNative();
+                Logger.Write("CloseGatt", $"id={Id},name={Name},pk={Pk},created={Created},call refreshed={refreshed}");
+            }
+            /*
+             * 22.12.29,CTY
+             * 
+             */
+            //== start
+            _gatt?.Disconnect();
+            //== end
             _gatt?.Close();
             _gatt = null;
 
@@ -403,6 +418,29 @@ namespace Plugin.BLE.Android
             {
                 throw new Exception($"Update Connection Interval fails with error. {ex.Message}");
             }
+        }
+
+        protected override bool RefreshDeviceCacheNative()
+        {
+            if (_gatt == null)
+            {
+                return false;
+            }
+            /*
+		     * There is a refresh() method in BluetoothGatt class but for now it's hidden.
+		     * We will call it using reflections.
+		     */
+            try
+            {
+                Java.Lang.Reflect.Method refresh = _gatt.Class.GetMethod("refresh");
+                return refresh.Invoke(_gatt) == Java.Lang.Boolean.True;
+            }
+            catch (Exception ex)
+            {
+                Trace.Message("An exception occurred while refreshing device, ex:{0}", ex);
+            }
+
+            return false;
         }
     }
 }
